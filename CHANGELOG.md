@@ -5,6 +5,41 @@ All notable changes to the MySQL MCP Server will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.41.0] - 2026-04-29
+
+### Added
+- **Streamable HTTP Transport Support**: Added HTTP server mode for remote database access
+  - New binary: `mcp-mysql-http` for starting HTTP server
+  - New file: `src/http-server.ts` - HTTP server implementation with Express
+  - New file: `src/tool-executor.ts` - Shared tool execution logic between stdio and HTTP transports
+  - New file: `bin/mcp-mysql-http.js` - CLI entry point for HTTP server
+  - Supports Streamable HTTP transport (recommended by MCP SDK over deprecated SSE)
+  - Session management with automatic cleanup (1 hour timeout)
+  - CORS support for browser clients
+  - Three endpoints:
+    - `GET /health` - Health check and server status
+    - `GET /info` - Server configuration and capabilities
+    - `POST /mcp` - MCP protocol endpoint for clients
+  - Environment variables for configuration:
+    - `HTTP_PORT` (default: 3000)
+    - `HTTP_HOST` (default: 0.0.0.0)
+  - Full compatibility with existing permission and category system
+
+### Changed
+- **Dependencies**: Added `express` (^4.18.2) and `@types/express` (^4.17.21)
+- **Documentation**: Updated README.md and DOCUMENTATIONS.md with HTTP usage examples
+  - Added HTTP/Remote Mode Configuration section
+  - Added Docker deployment example
+  - Added cURL usage examples
+  - Updated installation instructions with HTTP options
+- **Binary Configuration**: Added `mcp-mysql-http` to package.json bin entries
+- **Version**: Bumped version from 1.40.5 to 1.41.0
+
+### Fixed
+- Password encoding issue in MySQL connection URLs
+  - Added `decodeURIComponent()` to properly decode URL-encoded passwords
+  - Created GitHub issue #3 documenting the fix
+
 ## [1.40.5] - 2026-04-08
 
 ### Fixed

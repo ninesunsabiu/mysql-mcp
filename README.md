@@ -4,7 +4,7 @@
 
 **A production-ready Model Context Protocol (MCP) server for MySQL database integration with AI agents**
 
-**Last Updated:** 2026-04-08 14:30:00
+**Last Updated:** 2026-04-29 18:15:00
 
 [![npm version](https://img.shields.io/npm/v/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
 [![npm downloads](https://img.shields.io/npm/dm/@berthojoris/mcp-mysql-server)](https://www.npmjs.com/package/@berthojoris/mcp-mysql-server)
@@ -55,15 +55,26 @@ For agent-specific examples (Codex TOML, Zed, local path, multi-DB), see **[DOCU
 
 No installation required - run directly:
 
+**For local AI agents (stdio transport):**
 ```bash
 npx @berthojoris/mcp-mysql-server mysql://user:pass@localhost:3306/db "list,read,utility"
+```
+
+**For remote/HTTP access (Streamable HTTP transport):**
+```bash
+npx @berthojoris/mcp-mysql-server-http mysql://user:pass@localhost:3306/db "list,read,utility"
 ```
 
 ### Option 2: Global Installation
 
 ```bash
 npm install -g @berthojoris/mcp-mysql-server
+
+# Local/stdio mode
 mcp-mysql mysql://user:pass@localhost:3306/db "list,read,utility"
+
+# HTTP mode
+mcp-mysql-http mysql://user:pass@localhost:3306/db "list,read,utility"
 ```
 
 ---
@@ -208,6 +219,49 @@ Alternative approach using environment variables instead of connection string:
 ```
 
 For more client-specific config snippets, see **[DOCUMENTATIONS.md → Setup & Configuration](DOCUMENTATIONS.md#setup--configuration-extended)**.
+
+### HTTP/Remote Mode Configuration
+
+For remote access or when stdio is not suitable, use Streamable HTTP transport:
+
+**Quick Start:**
+```bash
+# Start HTTP server on port 3000
+HTTP_PORT=3000 npx @berthojoris/mcp-mysql-server-http \
+  mysql://user:pass@localhost:3306/db \
+  "list,read,utility"
+```
+
+**Environment Variables:**
+- `HTTP_PORT` - Port to listen on (default: 3000)
+- `HTTP_HOST` - Host to bind to (default: 0.0.0.0)
+- Plus all standard database and permission environment variables
+
+**Available Endpoints:**
+- `GET /health` - Health check endpoint
+- `GET /info` - Server information and configuration
+- `POST /mcp` - MCP protocol endpoint
+
+**Example with cURL:**
+```bash
+# Check server health
+curl http://localhost:3000/health
+
+# Get server info
+curl http://localhost:3000/info
+
+# MCP protocol requests (requires MCP client)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"method":"tools/list","params":{}}'
+```
+
+**Use Cases:**
+- Remote database access over HTTP/HTTPS
+- Containerized deployments
+- Cloud environments
+- Web-based MCP clients
+- API integrations
 
 ---
 

@@ -1,7 +1,7 @@
 # MySQL MCP Server - Documentation
 
-**Last Updated:** 2026-04-08 14:30:00
-**Version:** 1.40.5
+**Last Updated:** 2026-04-29 18:15:00
+**Version:** 1.41.0
 **Total Tools:** 62
 
 Comprehensive documentation for the MySQL MCP Server. For quick start, see [README.md](README.md).
@@ -11,6 +11,8 @@ Comprehensive documentation for the MySQL MCP Server. For quick start, see [READ
 ## Table of Contents
 
 1. [Configuration](#configuration)
+   - [Stdio Transport (Local)](#stdio-transport-local)
+   - [HTTP Transport (Remote)](#http-transport-remote)
 2. [Tools Overview](#tools-overview)
 3. [Permission System](#permission-system)
 4. [Tool Categories](#tool-categories)
@@ -22,7 +24,12 @@ Comprehensive documentation for the MySQL MCP Server. For quick start, see [READ
 
 ## Configuration
 
-### Dual-Layer Access Control
+MySQL MCP Server supports two transport modes:
+
+1. **Stdio Transport** - For local AI agents (Claude Desktop, Cursor, etc.)
+2. **Streamable HTTP Transport** - For remote access, cloud deployments, and HTTP-based clients
+
+### Stdio Transport (Local)
 
 Configure MySQL MCP with two access-control layers:
 
@@ -44,8 +51,92 @@ Configure MySQL MCP with two access-control layers:
 }
 ```
 
-**Layer 1 (Permissions)**: Broad operation control  
-**Layer 2 (Categories)**: Fine-grained tool filtering  
+**Layer 1 (Permissions)**: Broad operation control
+**Layer 2 (Categories)**: Fine-grained tool filtering
+
+### HTTP Transport (Remote)
+
+For remote database access or cloud deployments, use the HTTP server:
+
+**Start the Server:**
+
+```bash
+# Using npx (recommended)
+npx @berthojoris/mcp-mysql-server-http \
+  mysql://user:password@host:3306/database \
+  "list,read,utility" \
+  "database_discovery,custom_queries"
+
+# Using environment variables
+HTTP_PORT=3000 \
+HTTP_HOST=0.0.0.0 \
+DB_HOST=localhost \
+DB_PORT=3306 \
+DB_USER=root \
+DB_PASSWORD=yourpassword \
+DB_NAME=yourdatabase \
+MCP_PERMISSIONS="list,read,utility" \
+MCP_CATEGORIES="database_discovery,custom_queries,analysis" \
+npx @berthojoris/mcp-mysql-server-http
+```
+
+**Configuration Options:**
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `HTTP_PORT` | 3000 | Port to listen on |
+| `HTTP_HOST` | 0.0.0.0 | Host address to bind to |
+| `DB_HOST` | - | Database host |
+| `DB_PORT` | 3306 | Database port |
+| `DB_USER` | - | Database username |
+| `DB_PASSWORD` | - | Database password |
+| `DB_NAME` | - | Database name |
+| `MCP_PERMISSIONS` | "" | Comma-separated permissions |
+| `MCP_CATEGORIES` | "" | Comma-separated categories |
+
+**Available Endpoints:**
+
+- `GET /health` - Health check and status
+- `GET /info` - Server configuration and capabilities
+- `POST /mcp` - MCP protocol endpoint (for MCP clients)
+
+**Example Usage:**
+
+```bash
+# Check server health
+curl http://localhost:3000/health
+
+# Get server info
+curl http://localhost:3000/info
+
+# MCP client request (requires MCP-compatible client)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "mcp-session-id: optional-session-id" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/list",
+    "params": {},
+    "id": 1
+  }'
+```
+
+**Docker Example:**
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g @berthojoris/mcp-mysql-server
+EXPOSE 3000
+CMD ["mcp-mysql-http", "mysql://user:pass@db:3306/mydb", "list,read,utility"]
+```
+
+**Use Cases:**
+- Remote database access over HTTP/HTTPS
+- Cloud deployments (AWS, GCP, Azure)
+- Kubernetes/containerized environments
+- API integrations
+- Web-based MCP clients
 
 ### Environment Variables
 
